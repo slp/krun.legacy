@@ -5,15 +5,19 @@ ifeq ($(PREFIX),)
     PREFIX := /usr/local
 endif
 
+ifeq ($(CC),)
+    CC := gcc
+endif
+
 .PHONY: clean
 
 all: krun krun-guest
 
 krun: krun.c
-	gcc -o $@ $< $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
 krun-guest: krun-guest.c
-	gcc -o $@ $< $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
 clean:
 	rm -rf krun krun-guest

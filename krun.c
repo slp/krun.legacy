@@ -107,8 +107,9 @@ bool parse_cmdline(int argc, char *const argv[], struct cmdline *cmdline)
     return false;
 }
 
-int connect_to_passt()
+int connect_to_passt(const char* passt_socket_path)
 {
+    (void) passt_socket_path;
     struct sockaddr_un addr;
     int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (socket_fd < 0) {
@@ -128,7 +129,7 @@ int connect_to_passt()
     return socket_fd;
 }
 
-int start_passt()
+int start_passt(void)
 {
     int socket_fds[2];
     const int PARENT = 0;
@@ -167,6 +168,8 @@ int start_passt()
 
         return socket_fds[PARENT];
     }
+
+    return -2;
 }
 
 
@@ -174,7 +177,6 @@ int main(int argc, char *const argv[])
 {
     int ctx_id;
     int err;
-    int i;
     char path[PATH_MAX];
     char *username;
     char *const empty_envp[] = { 0 };
@@ -214,7 +216,7 @@ int main(int argc, char *const argv[])
     }
 
     // Configure the number of vCPUs (4) and the amount of RAM (4096 MiB).
-    if (err = krun_set_vm_config(ctx_id, 4, 4096)) {
+    if ((err = krun_set_vm_config(ctx_id, 4, 4096))) {
         errno = -err;
         perror("Error configuring the number of vCPUs and/or the amount of RAM");
         return -1;
@@ -225,7 +227,7 @@ int main(int argc, char *const argv[])
     rlim.rlim_cur = rlim.rlim_max;
     setrlimit(RLIMIT_NOFILE, &rlim);
 
-    if (err = krun_set_root(ctx_id, "/")) {
+    if ((err = krun_set_root(ctx_id, "/"))) {
         errno = -err;
         perror("Error configuring root path");
         return -1;
@@ -233,7 +235,7 @@ int main(int argc, char *const argv[])
 
     uint32_t virgl_flags = VIRGLRENDERER_USE_EGL | VIRGLRENDERER_DRM |
         VIRGLRENDERER_THREAD_SYNC | VIRGLRENDERER_USE_ASYNC_FENCE_CB;
-    if (err = krun_set_gpu_options(ctx_id, virgl_flags)) {
+    if ((err = krun_set_gpu_options(ctx_id, virgl_flags))) {
         errno = -err;
         perror("Error configuring gpu");
         return -1;
@@ -247,7 +249,7 @@ int main(int argc, char *const argv[])
             return -1;
         }
 
-        if (err = krun_set_passt_fd(ctx_id, passt_fd)) {
+        if ((err = krun_set_passt_fd(ctx_id, passt_fd))) {
             errno = -err;
             perror("Error configuring net mode");
             return -1;
@@ -263,7 +265,7 @@ int main(int argc, char *const argv[])
     snprintf(&path[0], PATH_MAX, "/home/%s", username);
 
     // Set the working directory to "/", just for the sake of completeness.
-    if (err = krun_set_workdir(ctx_id, &path[0])) {
+    if ((err = krun_set_workdir(ctx_id, &path[0]))) {
         errno = -err;
         perror("Error configuring \"/\" as working directory");
         return -1;
@@ -310,7 +312,7 @@ int main(int argc, char *const argv[])
     }
 
     // Specify the path of the binary to be executed in the isolated context, relative to the root path.
-    if (err = krun_set_exec(ctx_id, sargv[0], &sargv[1], env)) {
+    if ((err = krun_set_exec(ctx_id, sargv[0], &sargv[1], env))) {
         errno = -err;
         perror("Error configuring the parameters for the executable to be run");
         return -1;
@@ -318,7 +320,7 @@ int main(int argc, char *const argv[])
 
     // Start and enter the microVM. Unless there is some error while creating the microVM
     // this function never returns.
-    if (err = krun_start_enter(ctx_id)) {
+    if ((err = krun_start_enter(ctx_id))) {
         errno = -err;
         perror("Error creating the microVM");
         return -1;
