@@ -24,7 +24,7 @@
 
 char path[PATH_MAX];
 
-static int mount_filesystems()
+static int mount_filesystems(void)
 {
     int fd;
     int ret;
@@ -66,6 +66,11 @@ static int mount_filesystems()
     return 0;
 }
 
+static size_t strlen_u(const unsigned char* c)
+{
+    return strlen(c);
+}
+
 static void setup_fex()
 {
     int ret;
@@ -84,13 +89,13 @@ static void setup_fex()
         return;
     }
 
-    ret = write(fd, &fex_x86_magic[0], strlen(&fex_x86_magic[0]));
+    ret = write(fd, &fex_x86_magic[0], strlen_u(&fex_x86_magic[0]));
     if (ret < 0) {
         perror("registering fex x86 magic");
         return;
     }
 
-    ret = write(fd, &fex_x86_64_magic[0], strlen(&fex_x86_64_magic[0]));
+    ret = write(fd, &fex_x86_64_magic[0], strlen_u(&fex_x86_64_magic[0]));
     if (ret < 0) {
         perror("registering fex x86_64 magic");
         return;
@@ -272,7 +277,7 @@ int main(int argc, char **argv)
 
     if (mount_filesystems() < 0) {
         printf("Couldn't mount filesystems, bailing out\n");
-        exit(-2);
+        return -2;
     }
 
     setup_fex();
@@ -281,7 +286,7 @@ int main(int argc, char **argv)
 
     if (setup_user(username, uid, gid) < 0) {
         printf("Couldn't set up user, bailing out\n");
-        (exit -3);
+        return -3;
     }
 
     // Will not return if successful.
@@ -291,7 +296,7 @@ int main(int argc, char **argv)
     exec_argv = &argv[4];
     if (execvp(exec_argv[0], exec_argv) < 0) {
         printf("Couldn't execute '%s' inside the vm: %s\n", exec_argv[0], strerror(errno));
-        exit(-4);
+        return -4;
     }
 
     return 0;
