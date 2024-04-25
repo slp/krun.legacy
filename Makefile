@@ -19,6 +19,9 @@ krun: krun.c
 krun-guest: krun-guest.c
 	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
+clang-format:
+	git ls-files | grep -Ee "\\.[hc]$$" | xargs clang-format -style=file -i
+
 clean:
 	rm -rf krun krun-guest
 
