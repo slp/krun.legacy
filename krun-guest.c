@@ -28,7 +28,6 @@ static int
 mount_filesystems (void)
 {
   int fd;
-  int ret;
 
   if (mount ("tmpfs", "/var/run", "tmpfs",
              MS_NOEXEC | MS_NOSUID | MS_RELATIME, NULL)
@@ -75,12 +74,6 @@ mount_filesystems (void)
   return 0;
 }
 
-static size_t
-strlen_u (const unsigned char *c)
-{
-  return strlen (c);
-}
-
 static void
 setup_fex ()
 {
@@ -103,14 +96,14 @@ setup_fex ()
       return;
     }
 
-  ret = write (fd, &fex_x86_magic[0], strlen_u (&fex_x86_magic[0]));
+  ret = write (fd, &fex_x86_magic[0], (sizeof (fex_x86_magic) - 1));
   if (ret < 0)
     {
       perror ("registering fex x86 magic");
       return;
     }
 
-  ret = write (fd, &fex_x86_64_magic[0], strlen_u (&fex_x86_64_magic[0]));
+  ret = write (fd, &fex_x86_64_magic[0], (sizeof (fex_x86_64_magic) - 1));
   if (ret < 0)
     {
       perror ("registering fex x86_64 magic");
@@ -130,10 +123,14 @@ configure_network ()
   pid = fork ();
   if (pid == 0)
     {
+      char *const argv[] = {
+        "/sbin/dhclient",
+        0
+      };
       close (0);
       close (1);
       close (2);
-      execvp ("/sbin/dhclient", NULL);
+      execvp ("/sbin/dhclient", &argv[0]);
     }
   else
     {
@@ -206,13 +203,14 @@ setup_directories (uid_t uid, gid_t gid)
           chown (&path[0], uid, gid);
         }
     }
+
+  return 0;
 }
 
 int
 setup_user (char *username, uid_t uid, gid_t gid)
 {
   int ret;
-  struct rlimit rlim;
 
   setup_directories (uid, gid);
 
@@ -246,7 +244,6 @@ setup_user (char *username, uid_t uid, gid_t gid)
 void
 exec_sommelier (int argc, char **argv)
 {
-  pid_t pid;
   int ret;
   int num_args = 4;
   char *glenv;
