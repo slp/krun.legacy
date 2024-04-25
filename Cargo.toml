@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Sergio Lopez <slp@redhat.com>", "Teoh Han Hui <teohhanhui@gmail.com>"]
+edition = "2021"
+rust-version = "1.77.0"
+description = "Run programs from your system in a microVM"
+repository = "https://github.com/slp/krun"
+license = "MIT"
+
+[workspace.dependencies]
+anyhow = "1.0.82"
+bindgen = "0.69.4"
+bpaf = "0.9.11"
+nix = "0.28.0"
+rustix = "0.38.34"
+tempfile = "3.10.1"
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
