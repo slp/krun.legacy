@@ -1,5 +1,5 @@
 LDFLAGS = -lkrun
-CFLAGS = -O2
+CFLAGS = -O2 -Wall -Werror
 
 ifeq ($(PREFIX),)
     PREFIX := /usr/local
